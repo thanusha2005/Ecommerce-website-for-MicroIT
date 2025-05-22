@@ -1,0 +1,171 @@
+// Full E-commerce Website - React + Tailwind CSS + Extended Features
+// Features: Product Listing, Cart, Wishlist, Checkout, Login/Signup, Persistent Cart (localStorage)
+
+import { useEffect, useState } from 'react';
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+
+export default function Ecommerce() {
+  const [products, setProducts] = useState([]);
+  const [cart, setCart] = useState(() => JSON.parse(localStorage.getItem('cart')) || []);
+  const [wishlist, setWishlist] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [showCheckout, setShowCheckout] = useState(false);
+  const [address, setAddress] = useState("");
+  const [paymentDetails, setPaymentDetails] = useState({ cardNumber: "", expiry: "", cvv: "" });
+  const [user, setUser] = useState(null);
+  const [showLogin, setShowLogin] = useState(false);
+  const [auth, setAuth] = useState({ email: '', password: '' });
+
+  useEffect(() => {
+    fetch("https://fakestoreapi.com/products")
+      .then((res) => res.json())
+      .then((data) => setProducts(data));
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem('cart', JSON.stringify(cart));
+  }, [cart]);
+
+  const addToCart = (product) => setCart([...cart, product]);
+  const removeFromCart = (id) => setCart(cart.filter((item) => item.id !== id));
+  const addToWishlist = (product) => setWishlist([...wishlist, product]);
+  const removeFromWishlist = (id) => setWishlist(wishlist.filter((item) => item.id !== id));
+
+  const filteredProducts = products.filter((p) =>
+    p.title.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const handleCheckout = () => {
+    if (!user) {
+      alert("Please log in to checkout.");
+      return;
+    }
+    if (!address || !paymentDetails.cardNumber) {
+      alert("Please fill in address and payment details.");
+      return;
+    }
+    alert("Order placed successfully!");
+    setCart([]);
+    setShowCheckout(false);
+    setAddress("");
+    setPaymentDetails({ cardNumber: "", expiry: "", cvv: "" });
+  };
+
+  const handleLogin = () => {
+    if (auth.email && auth.password) {
+      setUser({ email: auth.email });
+      setShowLogin(false);
+      alert("Logged in successfully!");
+    } else {
+      alert("Please enter valid login credentials.");
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-100 p-6">
+      <header className="flex justify-between items-center mb-6">
+        <h1 className="text-4xl font-bold">My E-Commerce Store</h1>
+        <div className="flex items-center gap-4">
+          <Input
+            placeholder="Search products..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-64"
+          />
+          <Button className="bg-blue-600" onClick={() => setShowCheckout(!showCheckout)}>
+            Cart ({cart.length})
+          </Button>
+          <Button className="bg-pink-500" onClick={() => alert("Wishlist Feature")}>Wishlist ({wishlist.length})</Button>
+          {user ? (
+            <span>Welcome, {user.email}</span>
+          ) : (
+            <Button onClick={() => setShowLogin(true)}>Login</Button>
+          )}
+        </div>
+      </header>
+
+      {showLogin && (
+        <div className="bg-white p-6 rounded shadow-lg mb-6">
+          <h2 className="text-xl font-semibold mb-4">Login / Sign Up</h2>
+          <Input
+            placeholder="Email"
+            value={auth.email}
+            onChange={(e) => setAuth({ ...auth, email: e.target.value })}
+            className="mb-2"
+          />
+          <Input
+            placeholder="Password"
+            type="password"
+            value={auth.password}
+            onChange={(e) => setAuth({ ...auth, password: e.target.value })}
+            className="mb-4"
+          />
+          <Button onClick={handleLogin}>Login</Button>
+        </div>
+      )}
+
+      {showCheckout && (
+        <div className="bg-white p-6 rounded shadow-lg mb-6">
+          <h2 className="text-2xl font-semibold mb-4">Checkout</h2>
+          <Textarea
+            placeholder="Enter delivery address"
+            value={address}
+            onChange={(e) => setAddress(e.target.value)}
+            className="mb-4"
+          />
+          <Input
+            placeholder="Card Number"
+            value={paymentDetails.cardNumber}
+            onChange={(e) => setPaymentDetails({ ...paymentDetails, cardNumber: e.target.value })}
+            className="mb-2"
+          />
+          <Input
+            placeholder="Expiry Date (MM/YY)"
+            value={paymentDetails.expiry}
+            onChange={(e) => setPaymentDetails({ ...paymentDetails, expiry: e.target.value })}
+            className="mb-2"
+          />
+          <Input
+            placeholder="CVV"
+            value={paymentDetails.cvv}
+            onChange={(e) => setPaymentDetails({ ...paymentDetails, cvv: e.target.value })}
+            className="mb-4"
+          />
+          <Button onClick={handleCheckout}>Place Order</Button>
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        {filteredProducts.map((product) => (
+          <Card key={product.id} className="shadow-xl">
+            <img
+              src={product.image}
+              alt={product.title}
+              className="h-48 w-full object-contain p-4"
+            />
+            <CardContent>
+              <h2 className="text-lg font-semibold mb-2 line-clamp-1">
+                {product.title}
+              </h2>
+              <p className="text-gray-600 mb-2">${product.price}</p>
+              <p className="text-sm text-gray-500 mb-4 line-clamp-2">
+                {product.description}
+              </p>
+              <div className="flex gap-2">
+                <Button onClick={() => addToCart(product)} className="w-full bg-blue-600">
+                  Add to Cart
+                </Button>
+                <Button onClick={() => addToWishlist(product)} className="w-full bg-pink-500">
+                  Wishlist
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+}
