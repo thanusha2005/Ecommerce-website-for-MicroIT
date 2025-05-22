@@ -1,0 +1,25 @@
+document.getElementById("checkoutForm").addEventListener("submit", function(e) {
+  e.preventDefault();
+
+  var options = {
+    "key": "YOUR_RAZORPAY_KEY", // Replace with your key
+    "amount": 50000, // Amount in paise = ₹500
+    "currency": "INR",
+    "name": "E-Commerce Store",
+    "description": "Test Transaction",
+    "handler": function (response){
+        alert("Payment Successful! Payment ID: " + response.razorpay_payment_id);
+    },
+    "prefill": {
+        "name": "Customer Name",
+        "email": "customer@example.com",
+        "contact": "9999999999"
+    },
+    "theme": {
+        "color": "#3399cc"
+    }
+  };
+  
+  var rzp1 = new Razorpay(options);
+  rzp1.open();
+});
